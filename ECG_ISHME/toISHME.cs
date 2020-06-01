@@ -206,7 +206,7 @@ namespace ECG_ISHME
             return true;
         }
 
-        private bool SetnLeads(ushort num)
+        public bool SetnLeads(ushort num)
         { if (num > 12) //a maximum of 12 leads will be stored
                 return false;
             fixLengthBlock.nLeads = num;
@@ -260,7 +260,112 @@ namespace ECG_ISHME
         }
 
 
+        /**
+         * The storage size of one ECG sample has been fixed to two bytes. 
+         * Data will be stored in the signed format with digital 0 matching 0 mV; 
+         * most significant bit is "dedicated" to the sign and the range of 
+         * stored values covers the interval from -32,768 to +32767. 
+         * Negative values will be stored in a twocomplement way. 
+         * All two-byte samples will be stored in little-endian form (LSB first).
+         * 
+         * the raw data from sensor: 
+         *  byte 0  |   byte 1  |   byte 2  |   byte 3  | byte 4
+         *  Reserved| high bits | low bits  | high bits | low bits
+         *           of channel1  of chal 1   of chal 2   of chal 2
+         *           
+         * ISHME data form: (each sample sizes 2 bytes)        
+         *    byte 0  |   byte 2  |   byte 3  | byte 4     
+         *   low bits | high bits | low bits  | high bits 
+         *   of chal 1  of chal 1   of chal 2   of chal 2 
+         *   
+         *   ch1,1st sample | ch2, 1st sample ...ch1,2nt sample | ch2, 2nd sample...
+         */
 
+        public void ReadRawData(String filepath)
+        {
+            // read file into byte[]
+            try
+            {
+                input = File.ReadAllBytes(filepath);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message + "\n Cannot open file.");
+                return;
+            }
+
+            output = new byte[input.Length / 5 * 4];
+
+
+            // write file
+            short sample = 0;
+            byte lowByte = 0;
+            byte highByte = 0;
+            ulong outputIdx = 0;
+
+            for (int i = 0; i < input.Length; i++)
+            {
+                if (i % 5 == 0)
+                    continue;
+                else if (i % 5 == 1 || i % 5 == 3)
+                {
+                    output[outputIdx + 1] = input[i];
+                }
+                else
+                {
+                    output[outputIdx++] = input[i];
+                }
+            }
+        }
+
+        public void WarpHeader()
+        {
+            headerBlcok = new byte[FIX_BLOCK_LEN + fixLengthBlock.varLengthBlockSize];
+            uint desIdx = 0;
+
+            desIdx = CopyBytes(BitConverter.GetBytes(fixLengthBlock.varLengthBlockSize), headerBlcok, desIdx, 4);
+            desIdx = CopyBytes(BitConverter.GetBytes(fixLengthBlock.sampleSizeECG), headerBlcok, desIdx, 4);
+            desIdx = CopyBytes(BitConverter.GetBytes(fixLengthBlock.offsetVarLengthBlock), headerBlcok, desIdx, 4);
+            desIdx = CopyBytes(BitConverter.GetBytes(fixLengthBlock.offsetECGBlock), headerBlcok, desIdx, 4);
+            desIdx = CopyBytes(BitConverter.GetBytes(fixLengthBlock.fileVersion), headerBlcok, desIdx, 2);
+            desIdx = CopyBytes(Encoding.ASCII.GetBytes(fixLengthBlock.firstName), headerBlcok, desIdx, 40);
+            desIdx = CopyBytes(Encoding.ASCII.GetBytes(fixLengthBlock.lastName), headerBlcok, desIdx, 40);
+            desIdx = CopyBytes(Encoding.ASCII.GetBytes(fixLengthBlock.id), headerBlcok, desIdx, 20);
+            desIdx = CopyBytes(BitConverter.GetBytes(fixLengthBlock.sex), headerBlcok, desIdx, 2);
+            desIdx = CopyBytes(BitConverter.GetBytes(fixLengthBlock.race), headerBlcok, desIdx, 2);
+            desIdx = ConverToByte(Encoding.ASCII.GetBytes(fixLengthBlock.birthDate), headerBlcok, desIdx, 6);
+
+
+            desIdx = CopyBytes(BitConverter.GetBytes(fixLengthBlock.nLeads), headerBlcok, desIdx, 2);
+
+            desIdx = CopyBytes(BitConverter.GetBytes(fixLengthBlock.pacemaker), headerBlcok, desIdx, 2);
+            desIdx = CopyBytes(Encoding.ASCII.GetBytes(fixLengthBlock.recorder), headerBlcok, desIdx, 40);
+            desIdx = CopyBytes(BitConverter.GetBytes(fixLengthBlock.samplingRate), headerBlcok, desIdx, 2);
+            desIdx = CopyBytes(Encoding.ASCII.GetBytes(fixLengthBlock.proprietary), headerBlcok, desIdx, 80);
+            desIdx = CopyBytes(Encoding.ASCII.GetBytes(fixLengthBlock.copyright), headerBlcok, desIdx, 80);
+            desIdx = CopyBytes(Encoding.ASCII.GetBytes(fixLengthBlock.reserved), headerBlcok, desIdx, 88);
+
+            //public ushort[] birthDate = new ushort[3]; // Date of birth(European: day, month, year): 6 bytes
+            //public ushort[] recordDate = new ushort[3];    // Date of recording (European: day, month, year): 6 bytes
+            //public ushort[] fileDate = new ushort[3];  // Date of creation of Output file (European): 6 bytes
+            //public ushort[] startTime = new ushort[3];    // Start time (European: hour[0-23], min, sec): 6 bytes
+
+            //public short[] leadSpec = new short[12]; // lead specification:  2 * 12 bytes
+            //public short[] leadQual = new short[12]; // lead quality: 2* 12 bytes
+            //public short[] resolution = new short[12];   // Amplitude resolution in integer no.of nV: 2* 12 bytes
+
+
+
+        }
+
+
+        private uint CopyBytes(byte[] source, byte[] headerBlcok, uint destinationIndex, uint len)
+        {
+            Array.Copy(source, 0, headerBlcok, destinationIndex, len);
+            return destinationIndex + len;
+
+        }
+       
         static void Main(string[] args)
         {
             Console.WriteLine(short.MaxValue);
