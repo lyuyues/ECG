@@ -87,7 +87,178 @@ namespace ECG_ISHME
             fixLengthBlock = header.FixLengthBlock;
         }
 
-    
+        // 0(non-exist) by defualt, set only when more space needed for additional info
+        public bool SetVarLengthBlockSize(uint size)
+        {
+            fixLengthBlock.varLengthBlockSize = size;
+            return true;
+        }
+
+        private void SetSampleSizeECG()
+        {
+            fixLengthBlock.sampleSizeECG = (uint)output.Length / 2 * SAMPLE_RATE;
+        }
+
+        private void SetOffsetVarLengthBlock()
+        {
+            if (header.VarLengthBlock == null) {
+                fixLengthBlock.offsetVarLengthBlock = 0; // no VarLengthBlock
+            } else
+            {
+                fixLengthBlock.offsetECGBlock = MAGICNUMBER_CRC_LEN + FIX_BLOCK_LEN;
+            }
+        }
+
+        public void SetOffsetECGBlock()
+        {
+            fixLengthBlock.offsetECGBlock = MAGICNUMBER_CRC_LEN + FIX_BLOCK_LEN + fixLengthBlock.varLengthBlockSize;
+        }
+
+        public bool SetFileVersion(short version)
+        {
+            fixLengthBlock.fileVersion = version;
+            return true;
+        }
+
+        public bool SetFirstName(String firstName)
+        { int len = fixLengthBlock.firstName.Length;
+            if (firstName == null || firstName.Length > len)
+                return false;
+
+            fixLengthBlock.firstName = toCharArray(firstName, len);
+            return true;
+        }
+
+        public bool SetlastName(String lastName)
+        { int len = fixLengthBlock.lastName.Length;
+            if (lastName == null || lastName.Length > len)
+                return false;
+
+            fixLengthBlock.firstName = toCharArray(lastName, len);
+            return true;
+        }
+
+        public bool SetID(String id)
+        {
+            int len = fixLengthBlock.id.Length;
+            if (id == null || id.Length > len)
+                return false;
+
+            fixLengthBlock.id = toCharArray(id, len);
+            return true;
+        }
+
+        public bool SetSex(String sex)
+        {
+            if (sex.Equals("Man"))
+            {
+                fixLengthBlock.sex = 1;
+                return true;
+            }
+            else if (sex.Equals("Woman"))
+            {
+                fixLengthBlock.sex = 2;
+                return true;
+            }
+                return false;
+
+       
+        }
+
+        public bool SetRace(String race)
+        {
+            return false;
+        }
+
+        public bool SetBirthDate(String birthDate)
+        {
+            DateTime date = Convert.ToDateTime(birthDate);
+            if (date == null)
+                return false;
+            fixLengthBlock.birthDate = new ushort[] { (ushort)date.Day, (ushort)date.Month, (ushort)date.Year };
+            return true;
+        }
+
+        public bool SetRecordDate(String recordDate)
+        {
+            DateTime date = Convert.ToDateTime(recordDate);
+            if (date == null)
+                return false;
+            fixLengthBlock.recordDate = new ushort[]{(ushort)date.Day, (ushort)date.Month, (ushort)date.Year};
+            return true;
+        }
+
+        public bool SetFileDate(String fileDate)
+        {
+            DateTime date = Convert.ToDateTime(fileDate);
+            if (date == null)
+                return false;
+            fixLengthBlock.fileDate = new ushort[] { (ushort)date.Day, (ushort)date.Month, (ushort)date.Year };
+            return true;
+
+        }
+
+        public bool SetStartTime(DateTime startTime)
+        {
+            if (startTime == null)
+                return false;
+            fixLengthBlock.startTime = new ushort[] { (ushort)startTime.Hour, (ushort)startTime.Minute, (ushort)startTime.Second};
+            return true;
+        }
+
+        private bool SetnLeads(ushort num)
+        { if (num > 12) //a maximum of 12 leads will be stored
+                return false;
+            fixLengthBlock.nLeads = num;
+            return true;
+        }
+
+        public bool SetLeadSpec()
+        {
+            return false;
+        }
+
+        public bool SetLeadQual()
+        {
+            return false;
+        }
+
+        public bool SetResolution()
+        {
+            return false;
+        }
+
+        public bool SetPacemaker()
+        {
+            return false;
+        }
+
+        public bool SetRecorder()
+        {
+            return false;
+        }
+
+        public void SetSamplingRate()
+        {
+            fixLengthBlock.samplingRate = SAMPLE_RATE;
+
+        }
+
+        public bool SetProprietary()
+        {
+            return false;
+        }
+
+        public bool SetCopyright()
+        {
+            return false;
+        }
+
+        public bool SetReserved()
+        {
+            return false;
+        }
+
 
 
         static void Main(string[] args)
