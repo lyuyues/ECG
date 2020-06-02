@@ -356,29 +356,20 @@ namespace ECG_ISHME
             desIdx = CopyBytes(Encoding.ASCII.GetBytes(fixLengthBlock.id), headerBlcok, desIdx, 20);
             desIdx = CopyBytes(BitConverter.GetBytes(fixLengthBlock.sex), headerBlcok, desIdx, 2);
             desIdx = CopyBytes(BitConverter.GetBytes(fixLengthBlock.race), headerBlcok, desIdx, 2);
-            //desIdx = ConverToByte(Encoding.ASCII.GetBytes(fixLengthBlock.birthDate), headerBlcok, desIdx, 6);
-
-
+            desIdx = CopyBytes(ConvertToByteArray(fixLengthBlock.birthDate), headerBlcok, desIdx, 6);
+            desIdx = CopyBytes(ConvertToByteArray(fixLengthBlock.recordDate), headerBlcok, desIdx, 6);
+            desIdx = CopyBytes(ConvertToByteArray(fixLengthBlock.fileDate), headerBlcok, desIdx, 6);
+            desIdx = CopyBytes(ConvertToByteArray(fixLengthBlock.startTime), headerBlcok, desIdx, 6);
             desIdx = CopyBytes(BitConverter.GetBytes(fixLengthBlock.nLeads), headerBlcok, desIdx, 2);
-
+            desIdx = CopyBytes(ConvertToByteArray(fixLengthBlock.leadSpec), headerBlcok, desIdx, 24);
+            desIdx = CopyBytes(ConvertToByteArray(fixLengthBlock.leadQual), headerBlcok, desIdx, 24);
+            desIdx = CopyBytes(ConvertToByteArray(fixLengthBlock.resolution), headerBlcok, desIdx, 24);
             desIdx = CopyBytes(BitConverter.GetBytes(fixLengthBlock.pacemaker), headerBlcok, desIdx, 2);
             desIdx = CopyBytes(Encoding.ASCII.GetBytes(fixLengthBlock.recorder), headerBlcok, desIdx, 40);
             desIdx = CopyBytes(BitConverter.GetBytes(fixLengthBlock.samplingRate), headerBlcok, desIdx, 2);
             desIdx = CopyBytes(Encoding.ASCII.GetBytes(fixLengthBlock.proprietary), headerBlcok, desIdx, 80);
             desIdx = CopyBytes(Encoding.ASCII.GetBytes(fixLengthBlock.copyright), headerBlcok, desIdx, 80);
             desIdx = CopyBytes(Encoding.ASCII.GetBytes(fixLengthBlock.reserved), headerBlcok, desIdx, 88);
-
-            //public ushort[] birthDate = new ushort[3]; // Date of birth(European: day, month, year): 6 bytes
-            //public ushort[] recordDate = new ushort[3];    // Date of recording (European: day, month, year): 6 bytes
-            //public ushort[] fileDate = new ushort[3];  // Date of creation of Output file (European): 6 bytes
-            //public ushort[] startTime = new ushort[3];    // Start time (European: hour[0-23], min, sec): 6 bytes
-
-            //public short[] leadSpec = new short[12]; // lead specification:  2 * 12 bytes
-            //public short[] leadQual = new short[12]; // lead quality: 2* 12 bytes
-            //public short[] resolution = new short[12];   // Amplitude resolution in integer no.of nV: 2* 12 bytes
-
-
-
         }
 
         // 
@@ -395,7 +386,7 @@ namespace ECG_ISHME
             int idx = 0;
             for (int i = 0; i < source.Length; i++)
             {
-                Array.Copy(BitConverter.GetBytes(source[i]), 0, desArray, idx, 2);
+                Array desArray[idx] =.Copy(BitConverter.GetBytes(source[i]), 0, desArray, idx, 2);
                 idx += 2;
             }
             return desArray;
@@ -407,8 +398,7 @@ namespace ECG_ISHME
             int idx = 0;
             for (int i = 0; i < source.Length; i++)
             {
-                desArray[i] = BitConverter.GetBytes(source[i]);
-            }
+                Array.desArray[i] = BitConverter.GetBytes(source[i]);       }
             return desArray;
         }
 
