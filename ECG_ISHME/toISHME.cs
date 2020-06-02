@@ -370,9 +370,12 @@ namespace ECG_ISHME
             desIdx = CopyBytes(Encoding.ASCII.GetBytes(fixLengthBlock.proprietary), headerBlcok, desIdx, 80);
             desIdx = CopyBytes(Encoding.ASCII.GetBytes(fixLengthBlock.copyright), headerBlcok, desIdx, 80);
             desIdx = CopyBytes(Encoding.ASCII.GetBytes(fixLengthBlock.reserved), headerBlcok, desIdx, 88);
+            if (fixLengthBlock.varLengthBlockSize != 0)
+            {
+                CopyBytes(Encoding.ASCII.GetBytes(header.VarLengthBlock.reserved), headerBlcok, desIdx, fixLengthBlock.varLengthBlockSize);
+            }
         }
 
-        // 
         private uint CopyBytes(byte[] source, byte[] headerBlcok, uint destinationIndex, uint len)
         {
             Array.Copy(source, 0, headerBlcok, destinationIndex, len);
@@ -404,22 +407,40 @@ namespace ECG_ISHME
         }
 
         /**
-         * Calculate a CRC-CCITT checksum ((X^16 + X^12 + X^5 + 1).
+         * Calculate a CRC-CCITT checksum ((X^16 + X^12 + X^5 + 1).  1 0001 0000 0010 0001
          * The CRC is a 16-bit quantity and should be preset to all 1s ($FFFF) at the start of the calculation
          * for each block of data. Note: all operations are on bytes.
+         * The final check on CRC is accomplished by adding or concatenating CRCHI and CRCLO at the end of data stream.
          */
-
-        public void calculatCRC()
+        public void CalculateCRC()
         {
-            byte CRCHI =
-            byte CRCLO =
+            byte A; // new byte
+            byte B; // temp byte
+            byte CRCHI = 0xff; // High Byte(most significant) of the 16 - bit CRC
+            byte CRCLO = 0xff; // Low Byte (least significant) of the 16-bit CRC
+
+            for (int i = 0; i < headerBlcok.Length; i++) {
+                A = headerBlcok[i];
+                A = (byte) (A ^ CRCHI);                CRCHI = A;                A = (byte) (A >> 4);   //SHIFT A RIGHT FOUR TIMES { ZERO FILL}
+                A = (byte) (A ^ CRCHI); //{ I J K L M N O P}
+                CRCHI = CRCLO;  //swap CRCHI, CRCLO
+                CRCLO = A;                A = (byte)(A << 4); //A LEFT 4 TIMES { M N O P I J K L}
+                B = A;  //temp save 
+                A = (byte)((A >> 7) | (A << 1));    //ROTATE A LEFT ONCE { N O P I J K L M}
+                A = (byte) (A & 0x1f); // {0 0 0 I J K L M}
+                CRCHI = (byte) (A ^ CRCHI);                A = (byte) (B & 0xf0);  //{ M N O P 0 0 0 0)                CRCHI = (byte) (A ^ CRCHI);  // CRCHI complete
+                B = (byte)((B >> 7) | (B << 1));    //ROTATE B LEFT ONCE { N O P 0 0 0 0 M}
+                B = (byte) (B & 0xe0); // (NOP 0 0 0 0 0 )                CRCLO = (byte) (B ^ CRCLO); // CRCLO complete
+            }
+
+
         }
 
 
         public void WarpPackage()
         {
             // creat output file
-            String outputFile = @""; // output file formatted in ISHME
+            String outputFile = @""; // output file path formatted in ISHME
             FileStream fs;
 
             // create file
@@ -438,8 +459,6 @@ namespace ECG_ISHME
                 fs.Write(BitConverter.GetBytes(package.CheckSum));
                 fs.Write(headerBlcok);
                 fs.Write(output);
-                
-
             }
             catch (Exception e)
             {
@@ -461,7 +480,42 @@ namespace ECG_ISHME
         }
         static void Main(string[] args)
         {
-            Console.WriteLine(short.MaxValue);
+            byte A;
+            byte B; 
+            byte CRCLO = 0xff;
+            byte CRCHI = 0xff;
+
+
+            A = 0xa5; // 1010 0101
+            Console.WriteLine(Convert.ToString(A, 2));
+            A = (byte)(A ^ CRCHI); // 0101 1010
+            Console.WriteLine(Convert.ToString(A, 2));
+            CRCHI = A;  
+            A = (byte)(A >> 4);   //0000 0101 SHIFT A RIGHT FOUR TIMES { ZERO FILL}
+            Console.WriteLine(Convert.ToString(A, 2));
+            A = (byte)(A ^ CRCHI); //0000 0101 ^  0101 1010 = 0101 1111 { I J K L M N 0 P}
+            Console.WriteLine(Convert.ToString(A, 2));
+            CRCHI = CRCLO;  //swap CRCHI, CRCLO,  CRCHI = 1111 1111
+            CRCLO = A;   // CRCLO  = 0101 1111
+            A = (byte)(A << 4); //A LEFT 4 TIMES { M N 0 P I J K L} 1111 0000
+            Console.WriteLine(Convert.ToString(A, 2));
+            B = A;  //temp save  1111 0000
+            A = (byte)((A >> 7)|(A << 1)); //ROTATE A LEFT ONCE { N 0 P I J K L M} 1110 0001
+            Console.WriteLine(Convert.ToString(A, 2));
+            A = (byte)(A & 0x1f); // {0 0 0 I J K L M}  1110 0001 & 0001 1111 = 0000 0001
+            Console.WriteLine(Convert.ToString(A, 2));
+            CRCHI = (byte)(A ^ CRCHI);  // 0000 0001 ^ 1111 1111 = 1111 1110
+            A = (byte)(B & 0xf0);  //{ M N 0 P 0 0 0 0)  1111 0000 & 1111 0000 = 1111 0000
+            Console.WriteLine(Convert.ToString(A, 2));
+            Console.WriteLine();
+            CRCHI = (byte)(A ^ CRCHI);  // CRCHI complete 1111 0000 ^ 1111 1111 = 0000 1111
+            Console.WriteLine(Convert.ToString(B, 2));
+            B = (byte)((B >> 7) | (B << 1));   //ROTATE B LEFT ONCE {N 0 P 0 0 0 0 M}
+            Console.WriteLine(Convert.ToString(B, 2));
+            B = (byte)(B & 0xe0); // (NOP 0 0 0 0 0 ) & 1110 0000 = 
+            CRCLO = (byte)(B ^ CRCLO); // CRCLO complete
+
+           
         }
     }
 }
