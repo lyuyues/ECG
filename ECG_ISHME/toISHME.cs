@@ -386,7 +386,7 @@ namespace ECG_ISHME
             int idx = 0;
             for (int i = 0; i < source.Length; i++)
             {
-                Array desArray[idx] =.Copy(BitConverter.GetBytes(source[i]), 0, desArray, idx, 2);
+                Array.Copy(BitConverter.GetBytes(source[i]), 0, desArray, idx, 2);
                 idx += 2;
             }
             return desArray;
@@ -398,8 +398,9 @@ namespace ECG_ISHME
             int idx = 0;
             for (int i = 0; i < source.Length; i++)
             {
-                Array.desArray[i] = BitConverter.GetBytes(source[i]);       }
-            return desArray;
+                Array.Copy(BitConverter.GetBytes(source[i]), 0, desArray, idx, 2);
+            }
+                return desArray;
         }
 
         /**
@@ -434,16 +435,10 @@ namespace ECG_ISHME
             try
             {
                 fs.Write(Encoding.ASCII.GetBytes(package.MagicNumber));
-                fs.Write(package.CheckSum));
-                if (fixLengthBlock.varLengthBlockSize != 0)
-                {
-                    fs.Write();
-                }
-
-                for (int i = 0; i < output.Length; i++)
-                {
-                    fs.Write(output[i]);
-                }
+                fs.Write(BitConverter.GetBytes(package.CheckSum));
+                fs.Write(headerBlcok);
+                fs.Write(output);
+                
 
             }
             catch (Exception e)
