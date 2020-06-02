@@ -419,21 +419,27 @@ namespace ECG_ISHME
             byte CRCHI = 0xff; // High Byte(most significant) of the 16 - bit CRC
             byte CRCLO = 0xff; // Low Byte (least significant) of the 16-bit CRC
 
-            for (int i = 0; i < headerBlcok.Length; i++) {
+            for (int i = 0; i < headerBlcok.Length; i++)
+            {
                 A = headerBlcok[i];
-                A = (byte) (A ^ CRCHI);                CRCHI = A;                A = (byte) (A >> 4);   //SHIFT A RIGHT FOUR TIMES { ZERO FILL}
-                A = (byte) (A ^ CRCHI); //{ I J K L M N O P}
+                A = (byte)(A ^ CRCHI);                CRCHI = A;                A = (byte)(A >> 4);   //SHIFT A RIGHT FOUR TIMES { ZERO FILL}
+                A = (byte)(A ^ CRCHI); //{ I J K L M N O P}
                 CRCHI = CRCLO;  //swap CRCHI, CRCLO
                 CRCLO = A;                A = (byte)(A << 4); //A LEFT 4 TIMES { M N O P I J K L}
                 B = A;  //temp save 
                 A = (byte)((A >> 7) | (A << 1));    //ROTATE A LEFT ONCE { N O P I J K L M}
-                A = (byte) (A & 0x1f); // {0 0 0 I J K L M}
-                CRCHI = (byte) (A ^ CRCHI);                A = (byte) (B & 0xf0);  //{ M N O P 0 0 0 0)                CRCHI = (byte) (A ^ CRCHI);  // CRCHI complete
+                A = (byte)(A & 0x1f); // {0 0 0 I J K L M}
+                CRCHI = (byte)(A ^ CRCHI);                A = (byte)(B & 0xf0);  //{ M N O P 0 0 0 0)
+                CRCHI = (byte)(A ^ CRCHI);  // CRCHI complete
                 B = (byte)((B >> 7) | (B << 1));    //ROTATE B LEFT ONCE { N O P 0 0 0 0 M}
-                B = (byte) (B & 0xe0); // (NOP 0 0 0 0 0 )                CRCLO = (byte) (B ^ CRCLO); // CRCLO complete
+                B = (byte)(B & 0xe0); // (NOP 0 0 0 0 0 )
+                CRCLO = (byte)(B ^ CRCLO); // CRCLO complete
             }
 
-
+            ushort ONE =(ushort) 0xffff;
+            ushort a = (ushort) (CRCHI & ONE);
+            ushort b = (ushort) (CRCLO & ONE);
+            package.CheckSum = (short) ((a << 4) & b);
         }
 
 
