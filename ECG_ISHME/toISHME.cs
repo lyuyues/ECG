@@ -304,7 +304,6 @@ namespace ECG_ISHME
          *   
          *   ch1,1st sample | ch2, 1st sample ...ch1,2nt sample | ch2, 2nd sample...
          */
-
         public void ReadRawData(String filepath)
         {
             // read file into byte[]
@@ -382,6 +381,7 @@ namespace ECG_ISHME
 
         }
 
+        // 
         private uint CopyBytes(byte[] source, byte[] headerBlcok, uint destinationIndex, uint len)
         {
             Array.Copy(source, 0, headerBlcok, destinationIndex, len);
@@ -389,15 +389,28 @@ namespace ECG_ISHME
 
         }
 
-        private byte[] ConvertToByteArray(ushort[] sourceArray)
+        private byte[] ConvertToByteArray(ushort[] source)
         {
-            byte[] desArray = new byte[sourceArray.Length];
-            for (int i = 0; i < desArray.Length; i++)
+            byte[] desArray = new byte[source.Length * 2];
+            int idx = 0;
+            for (int i = 0; i < source.Length; i++)
             {
-                desArray[i] = BitConverter.GetBytes(sourceArray[i]);
+                Array.Copy(BitConverter.GetBytes(source[i]), 0, desArray, idx, 2);
+                idx += 2;
             }
+            return desArray;
         }
 
+        private byte[] ConvertToByteArray(short[] source)
+        {
+            byte[] desArray = new byte[source.Length];
+            int idx = 0;
+            for (int i = 0; i < source.Length; i++)
+            {
+                desArray[i] = BitConverter.GetBytes(source[i]);
+            }
+            return desArray;
+        }
 
         /**
          * Calculate a CRC-CCITT checksum ((X^16 + X^12 + X^5 + 1).
