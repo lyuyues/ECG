@@ -109,9 +109,19 @@ namespace ECG_ISHME
             }
         }
 
+        public uint GetOffsetVarLengthBlock()
+        {
+            return fixLengthBlock.offsetVarLengthBlock;
+        }
+
         public void SetOffsetECGBlock()
         {
             fixLengthBlock.offsetECGBlock = MAGICNUMBER_CRC_LEN + FIX_BLOCK_LEN + fixLengthBlock.varLengthBlockSize;
+        }
+
+        public uint GetOffsetECGBlock()
+        {
+            return fixLengthBlock.offsetECGBlock;
         }
 
         public bool SetFileVersion(short version)
@@ -259,6 +269,20 @@ namespace ECG_ISHME
             return false;
         }
 
+        // copy string (from) to char array (des) 
+        private char[] toCharArray(String from, int len)
+        {
+            char[] des = new char[len];
+            char[] arr = from.ToCharArray();
+            int i = 0;
+            for (i = 0; i < arr.Length; i++)
+            {
+                des[i] = arr[i];
+            }
+            des[i] = '\0';
+            return des;
+        }
+
 
         /**
          * The storage size of one ECG sample has been fixed to two bytes. 
@@ -333,7 +357,7 @@ namespace ECG_ISHME
             desIdx = CopyBytes(Encoding.ASCII.GetBytes(fixLengthBlock.id), headerBlcok, desIdx, 20);
             desIdx = CopyBytes(BitConverter.GetBytes(fixLengthBlock.sex), headerBlcok, desIdx, 2);
             desIdx = CopyBytes(BitConverter.GetBytes(fixLengthBlock.race), headerBlcok, desIdx, 2);
-            desIdx = ConverToByte(Encoding.ASCII.GetBytes(fixLengthBlock.birthDate), headerBlcok, desIdx, 6);
+            //desIdx = ConverToByte(Encoding.ASCII.GetBytes(fixLengthBlock.birthDate), headerBlcok, desIdx, 6);
 
 
             desIdx = CopyBytes(BitConverter.GetBytes(fixLengthBlock.nLeads), headerBlcok, desIdx, 2);
@@ -358,14 +382,85 @@ namespace ECG_ISHME
 
         }
 
-
         private uint CopyBytes(byte[] source, byte[] headerBlcok, uint destinationIndex, uint len)
         {
             Array.Copy(source, 0, headerBlcok, destinationIndex, len);
             return destinationIndex + len;
 
         }
-       
+
+        private byte[] ConvertToByteArray(ushort[] sourceArray)
+        {
+            byte[] desArray = new byte[sourceArray.Length];
+            for (int i = 0; i < desArray.Length; i++)
+            {
+                desArray[i] = BitConverter.GetBytes(sourceArray[i]);
+            }
+        }
+
+
+        /**
+         * Calculate a CRC-CCITT checksum ((X^16 + X^12 + X^5 + 1).
+         * The CRC is a 16-bit quantity and should be preset to all 1s ($FFFF) at the start of the calculation
+         * for each block of data. Note: all operations are on bytes.
+         */
+
+        public void calculatCRC()
+        {
+            byte CRCHI =
+            byte CRCLO =
+        }
+
+
+        public void WarpPackage()
+        {
+            // creat output file
+            String outputFile = @""; // output file formatted in ISHME
+            FileStream fs;
+
+            // create file
+            try
+            {
+                fs = File.Create(outputFile);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message + "\n Cannot create file.");
+                return;
+            }
+            try
+            {
+                fs.Write(Encoding.ASCII.GetBytes(package.MagicNumber));
+                fs.Write(package.CheckSum));
+                if (fixLengthBlock.varLengthBlockSize != 0)
+                {
+                    fs.Write();
+                }
+
+                for (int i = 0; i < output.Length; i++)
+                {
+                    fs.Write(output[i]);
+                }
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message + "\n Cannot write file.");
+                return;
+            }
+        }
+
+        /**
+         * convert raw data value into format with digital 0 matching 0 mV
+         * stored values covers the interval from -32,768 to +32767 (2 bytes).
+        */
+        private static short Reformat(byte input)
+        {
+            //    if (input > DIV)
+            //        input = -(((~input) & MAX_INPUT) + 1);
+            //    return input * 1.0d / DIV * MAX_VOLTAGE;
+            return 0;
+        }
         static void Main(string[] args)
         {
             Console.WriteLine(short.MaxValue);
