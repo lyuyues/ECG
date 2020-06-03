@@ -15,59 +15,76 @@ using System.Text;
 
 namespace ECG_ISHME
 {
-    class ISHMEPackage
-    { 
-        public string MagicNumber { get; set; } // 8 bytes
-        public short CheckSum { get; set; } // 2 bytes
-        public Header Header { get; set; } // 512 + var bytes
-    }
-
-    class Header
-    { 
-        public FixLengthBlock FixLengthBlock { get; set; } // 512 bytes
-        public VarLengthBlock VarLengthBlock { get; set; } // var bytes
-    }
-
-    class FixLengthBlock
-    {  // the fixed-length (512 bytes) header block.
-        public uint varLengthBlockSize = 0;    // size(in bytes) of variable length block: 4 bytes
-        public uint sampleSizeECG; // size (in samples) of ECG: 4 bytes
-        public uint offsetVarLengthBlock;  // offset of variable length block(in bytes from beginning of file): 4 byte
-        public uint offsetECGBlock;    // offset of ECG block(in bytes from beginning of life): 4 bytes
-        public short fileVersion; // version of the file: 2 bytes
-        public char[] firstName = new char[40]; // subject first name: 40 bytes
-        public char[] lastName = new char[40];  //subject last name: 40 bytes
-        public char[] id = new char[20];    // subject ID: 20 bytes
-        public ushort sex = 0;  // subject sex: (0: unknown, 1: male, 2:female) 2 bytes
-        public ushort race = 0; // subject race: (0: unknown, 1: Caucasian, 2:Black, 3: Oriental, 4-9: Reserved) 2 bytes
-        public ushort[] birthDate = new ushort[3]; // Date of birth(European: day, month, year): 6 bytes
-        public ushort[] recordDate = new ushort[3];    // Date of recording (European: day, month, year): 6 bytes
-        public ushort[] fileDate = new ushort[3];  // Date of creation of Output file (European): 6 bytes
-        public ushort[] startTime = new ushort[3];    // Start time (European: hour[0-23], min, sec): 6 bytes
-        public ushort nLeads = 2;// number of stored leads: 2 bytes  
-        public short[] leadSpec = new short[12]; // lead specification:  2 * 12 bytes
-        public short[] leadQual = new short[12]; // lead quality: 2* 12 bytes
-        public short[] resolution = new short[12];   // Amplitude resolution in integer no.of nV: 2* 12 bytes
-        public short pacemaker = 0; // Pacemaker code: 2 bytes
-        public char[] recorder = new char[40]; //Type of recorder (either analog or digital): 40 bytes
-        public ushort samplingRate; // Sampling rate (in hertz): 2 bytes
-        public char[] proprietary = new char[80];   // Proprietary of ECG (if any): 80 bytes
-        public char[] copyright = new char[80]; //Copyright and restriction of diffusion(if any): 80 bytes
-        public char[] reserved = new char[88];  //88 bytes
-    }
 
     /**
-     * The variable-length block will consist simply of a stream of ASCII 
-     * (extended set of 256 characters) characters that any user or manufacturer 
-     * What will use according to his needs.
+     * wrap patient info & raw data together into a file in ISHME format
      */
-    class VarLengthBlock
+    public class toISHME
     {
-        public char[] reserved; 
-    }
+        // ISHMEPackage = MagicNumber + CheckSum + Header + Data
+        class ISHMEPackage
+        {
+            public string MagicNumber { get; set; } // 8 bytes
+            public short CheckSum { get; set; } // 2 bytes
+            public Header Header { get; set; } // 512 + var bytes
 
-    class toISHME
-    {
+            public ISHMEPackage()
+            {
+                Header = new Header();
+            }
+        }
+
+        // Header = FixLengthBlock + VarLengthBlock
+        class Header
+        {
+            public FixLengthBlock FixLengthBlock { get; set; } // 512 bytes
+            public VarLengthBlock VarLengthBlock { get; set; } // var bytes
+
+            public Header()
+            {
+                FixLengthBlock = new FixLengthBlock();
+                VarLengthBlock = new VarLengthBlock();
+            }
+        }
+
+        class FixLengthBlock
+        {  // the fixed-length (512 bytes) header block.
+            public uint varLengthBlockSize = 0;    // size(in bytes) of variable length block: 4 bytes
+            public uint sampleSizeECG; // size (in samples) of ECG: 4 bytes
+            public uint offsetVarLengthBlock;  // offset of variable length block(in bytes from beginning of file): 4 byte
+            public uint offsetECGBlock;    // offset of ECG block(in bytes from beginning of life): 4 bytes
+            public short fileVersion; // version of the file: 2 bytes
+            public char[] firstName = new char[40]; // subject first name: 40 bytes
+            public char[] lastName = new char[40];  //subject last name: 40 bytes
+            public char[] id = new char[20];    // subject ID: 20 bytes
+            public ushort sex = 0;  // subject sex: (0: unknown, 1: male, 2:female) 2 bytes
+            public ushort race = 0; // subject race: (0: unknown, 1: Caucasian, 2:Black, 3: Oriental, 4-9: Reserved) 2 bytes
+            public ushort[] birthDate = new ushort[3]; // Date of birth(European: day, month, year): 6 bytes
+            public ushort[] recordDate = new ushort[3];    // Date of recording (European: day, month, year): 6 bytes
+            public ushort[] fileDate = new ushort[3];  // Date of creation of Output file (European): 6 bytes
+            public ushort[] startTime = new ushort[3];    // Start time (European: hour[0-23], min, sec): 6 bytes
+            public ushort nLeads = 2;// number of stored leads: 2 bytes  
+            public short[] leadSpec = new short[12]; // lead specification:  2 * 12 bytes
+            public short[] leadQual = new short[12]; // lead quality: 2* 12 bytes
+            public short[] resolution = new short[12];   // Amplitude resolution in integer no.of nV: 2* 12 bytes
+            public short pacemaker = 0; // Pacemaker code: 2 bytes
+            public char[] recorder = new char[40]; //Type of recorder (either analog or digital): 40 bytes
+            public ushort samplingRate; // Sampling rate (in hertz): 2 bytes
+            public char[] proprietary = new char[80];   // Proprietary of ECG (if any): 80 bytes
+            public char[] copyright = new char[80]; //Copyright and restriction of diffusion(if any): 80 bytes
+            public char[] reserved = new char[88];  //88 bytes
+        }
+
+        /**
+         * The variable-length block will consist simply of a stream of ASCII 
+         * (extended set of 256 characters) characters that any user or manufacturer 
+         * What will use according to his needs.
+         */
+        class VarLengthBlock
+        {
+            public char[] reserved;
+        }
+
         ISHMEPackage package;
         Header header;
         FixLengthBlock fixLengthBlock;
@@ -76,8 +93,8 @@ namespace ECG_ISHME
         private static readonly uint FIX_BLOCK_LEN = 512;
 
         byte[] headerBlcok;
-        byte[] input;
-        byte[] output;
+        byte[] untrimmedRawData; // the raw data
+        byte[] trimmedRawData; // trimmed raw data (get rid of useless bytes)
 
 
         public toISHME()
@@ -96,7 +113,7 @@ namespace ECG_ISHME
 
         private void SetSampleSizeECG()
         {
-            fixLengthBlock.sampleSizeECG = (uint)output.Length / 2 * SAMPLE_RATE;
+            fixLengthBlock.sampleSizeECG = (uint)trimmedRawData.Length / 2 * SAMPLE_RATE;
         }
 
         private void SetOffsetVarLengthBlock()
@@ -270,7 +287,7 @@ namespace ECG_ISHME
         }
 
         // copy string (from) to char array (des) 
-        private char[] toCharArray(String from, int len)
+        private char[] toCharArray(string from, int len)
         {
             char[] des = new char[len];
             char[] arr = from.ToCharArray();
@@ -282,7 +299,6 @@ namespace ECG_ISHME
             des[i] = '\0';
             return des;
         }
-
 
         /**
          * The storage size of one ECG sample has been fixed to two bytes. 
@@ -304,12 +320,12 @@ namespace ECG_ISHME
          *   
          *   ch1,1st sample | ch2, 1st sample ...ch1,2nt sample | ch2, 2nd sample...
          */
-        public void ReadRawData(String filepath)
+        public void TrimRawData(string filepath)
         {
             // read file into byte[]
             try
             {
-                input = File.ReadAllBytes(filepath);
+                untrimmedRawData = File.ReadAllBytes(filepath);
             }
             catch (Exception e)
             {
@@ -317,7 +333,7 @@ namespace ECG_ISHME
                 return;
             }
 
-            output = new byte[input.Length / 5 * 4];
+            trimmedRawData = new byte[untrimmedRawData.Length / 5 * 4];
 
 
             // write file
@@ -326,17 +342,17 @@ namespace ECG_ISHME
             byte highByte = 0;
             ulong outputIdx = 0;
 
-            for (int i = 0; i < input.Length; i++)
+            for (int i = 0; i < untrimmedRawData.Length; i++)
             {
                 if (i % 5 == 0)
                     continue;
                 else if (i % 5 == 1 || i % 5 == 3)
                 {
-                    output[outputIdx + 1] = input[i];
+                    trimmedRawData[outputIdx + 1] = untrimmedRawData[i];
                 }
                 else
                 {
-                    output[outputIdx++] = input[i];
+                    trimmedRawData[outputIdx++] = untrimmedRawData[i];
                 }
             }
         }
@@ -464,7 +480,7 @@ namespace ECG_ISHME
                 fs.Write(Encoding.ASCII.GetBytes(package.MagicNumber));
                 fs.Write(BitConverter.GetBytes(package.CheckSum));
                 fs.Write(headerBlcok);
-                fs.Write(output);
+                fs.Write(trimmedRawData);
             }
             catch (Exception e)
             {
@@ -486,8 +502,16 @@ namespace ECG_ISHME
         }
         static void Main(string[] args)
         {
+            toISHME obj = new toISHME();
+            //obj.ReadRawData(""); // fill byte[] input, byte[] output
+
+
+
+
+            // test code
+            /*
             byte A;
-            byte B; 
+            byte B;
             byte CRCLO = 0xff;
             byte CRCHI = 0xff;
 
@@ -496,7 +520,7 @@ namespace ECG_ISHME
             Console.WriteLine(Convert.ToString(A, 2));
             A = (byte)(A ^ CRCHI); // 0101 1010
             Console.WriteLine(Convert.ToString(A, 2));
-            CRCHI = A;  
+            CRCHI = A;
             A = (byte)(A >> 4);   //0000 0101 SHIFT A RIGHT FOUR TIMES { ZERO FILL}
             Console.WriteLine(Convert.ToString(A, 2));
             A = (byte)(A ^ CRCHI); //0000 0101 ^  0101 1010 = 0101 1111 { I J K L M N 0 P}
@@ -506,7 +530,7 @@ namespace ECG_ISHME
             A = (byte)(A << 4); //A LEFT 4 TIMES { M N 0 P I J K L} 1111 0000
             Console.WriteLine(Convert.ToString(A, 2));
             B = A;  //temp save  1111 0000
-            A = (byte)((A >> 7)|(A << 1)); //ROTATE A LEFT ONCE { N 0 P I J K L M} 1110 0001
+            A = (byte)((A >> 7) | (A << 1)); //ROTATE A LEFT ONCE { N 0 P I J K L M} 1110 0001
             Console.WriteLine(Convert.ToString(A, 2));
             A = (byte)(A & 0x1f); // {0 0 0 I J K L M}  1110 0001 & 0001 1111 = 0000 0001
             Console.WriteLine(Convert.ToString(A, 2));
@@ -520,8 +544,8 @@ namespace ECG_ISHME
             Console.WriteLine(Convert.ToString(B, 2));
             B = (byte)(B & 0xe0); // (NOP 0 0 0 0 0 ) & 1110 0000 = 
             CRCLO = (byte)(B ^ CRCLO); // CRCLO complete
+            */
 
-           
         }
     }
 }
