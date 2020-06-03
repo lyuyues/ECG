@@ -320,7 +320,7 @@ namespace ECG_ISHME
          *   
          *   ch1,1st sample | ch2, 1st sample ...ch1,2nt sample | ch2, 2nd sample...
          */
-        public void TrimRawData(string filepath)
+        private void TrimRawData(string filepath)
         {
             // read file into byte[]
             try
@@ -500,6 +500,17 @@ namespace ECG_ISHME
             //    return input * 1.0d / DIV * MAX_VOLTAGE;
             return 0;
         }
+
+        private void SetPatientInfo()
+        {
+
+        }
+
+        public void ConvetToISHME(string rawDataPath, PatientInfo patientInfo, string outputPath)
+        {
+            SetPatientInfo();
+            WarpPackage();
+        } 
         static void Main(string[] args)
         {
             toISHME obj = new toISHME();
